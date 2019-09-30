@@ -32,7 +32,18 @@ void imprimeValores(task_t* task);
 // tratador do sinal
 void tratador (int signum)
 {
-  tempo++; 	
+  tempo++; 
+  taskAtual->quantum--;
+  if(taskAtual->flag==0){
+		if(taskAtual->quantum==0){
+			task_yield();
+		}
+		
+	}	
+	else
+	{
+		return;
+	}	
 }
 
 task_t * scheduler(){
@@ -59,7 +70,7 @@ task_t * scheduler(){
 	}
 
 	ptrPrio->prioD=ptrPrio->prio;
-
+	ptrPrio->quantum=20;
     return ptrPrio;
 }
 
@@ -82,12 +93,12 @@ void imprimeValores(task_t* task){
 
 void dispatcher_body (){ // dispatcher é uma tarefa
 
-   pronta=pronta->prev;
+   //pronta=pronta->prev;
    task_t* next;
    
    while ( queue_size((queue_t*) pronta) > 0 )
    {
-		soma=0;
+		 soma=0;
       next = scheduler() ; // scheduler é uma função
 	  soma= systime();
       if (next)

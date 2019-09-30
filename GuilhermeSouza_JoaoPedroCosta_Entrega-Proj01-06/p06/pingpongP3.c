@@ -38,7 +38,18 @@ void imprimeValores(task_t* task);
 // tratador do sinal
 void tratador (int signum)
 {
-  tempo++; 	
+  tempo++; 
+  taskAtual->quantum--;
+  if(taskAtual->flag==0){
+		if(taskAtual->quantum==0){
+			task_yield();
+		}
+		
+	}	
+	else
+	{
+		return;
+	}	
 }
 
 
@@ -46,7 +57,7 @@ void tratador (int signum)
 task_t * scheduler(){
 
     pronta=pronta->next; 
-
+    pronta->quantum=20;
 
     return pronta;
 }
@@ -138,6 +149,7 @@ int task_create (task_t *task, void (*start_routine)(void *), void *arg){
 	task->execTime=systime();
 	task->processTime=0;
 	task->activs=0;
+	task->quantum=20;
 	getcontext (&task->context);
 
 	stack = malloc (STACKSIZE) ;
