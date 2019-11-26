@@ -119,7 +119,7 @@ void pingpong_init () {
 	/*taskMain = (task_t*)(malloc(sizeof(task_t)));
 	taskMain->tid = 0;
 	taskMain->context = contextMain;*/
-	task_create(&taskMain,taskMain,"Main");
+	task_create(&taskMain,main,"Main");
 	taskAtual = taskMain;
 
 	task_create(&dispatcher,dispatcher_body,"Dispatcher");
