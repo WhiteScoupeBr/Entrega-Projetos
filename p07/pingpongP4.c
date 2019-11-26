@@ -118,7 +118,7 @@ void pingpong_init () {
 	setvbuf (stdout, 0, _IONBF, 0) ;
 	taskMain = (task_t*)(malloc(sizeof(task_t)));
 	taskMain->tid = 0;
-	task_create(&taskMain,main,"Main");
+	task_create(taskMain,NULL,"Main");
 	taskMain->context = contextMain;
 	taskAtual = taskMain;
 
