@@ -19,7 +19,7 @@ struct itimerval timer;
 
 ucontext_t contextMain;
 task_t *taskAtual;
-task_t *taskMain;
+task_t taskMain;
 task_t *pronta,*suspensa,*terminada;
 task_t dispatcher;
 unsigned int tempo=0;
@@ -116,9 +116,10 @@ void dispatcher_body (){ // dispatcher é uma tarefa
 void pingpong_init () {
 
 	setvbuf (stdout, 0, _IONBF, 0) ;
-	taskMain = (task_t*)(malloc(sizeof(task_t)));
+	/*taskMain = (task_t*)(malloc(sizeof(task_t)));
 	taskMain->tid = 0;
-	taskMain->context = contextMain;
+	taskMain->context = contextMain;*/
+	task_create(&taskMain,taskMain,"Main");
 	taskAtual = taskMain;
 
 	task_create(&dispatcher,dispatcher_body,"Dispatcher");
