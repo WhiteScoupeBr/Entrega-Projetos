@@ -147,7 +147,7 @@ void pingpong_init () {
 		exit (1) ;
 	}
 	//while (1) ;
-	
+	task_yield();
 }
 
 int task_create (task_t *task, void (*start_routine)(void *), void *arg){
@@ -183,7 +183,8 @@ int task_create (task_t *task, void (*start_routine)(void *), void *arg){
 
 	if(task!=&dispatcher)
 		queue_append((queue_t**)&pronta,(queue_t*)task);
-
+	
+	
 
 	return id;
 }
