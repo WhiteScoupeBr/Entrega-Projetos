@@ -93,7 +93,9 @@ void imprimeValores(task_t* task){
 
 void dispatcher_body (){ // dispatcher é uma tarefa
 
-   //pronta=pronta->prev;
+	//pronta=pronta->next;
+	
+
    task_t* next;
    
    while ( queue_size((queue_t*) pronta) > 0 )
@@ -124,7 +126,7 @@ void pingpong_init () {
 
 	task_create(&dispatcher,dispatcher_body,"Dispatcher");
 
-		// registra a a��o para o sinal de timer SIGALRM
+	// registra a a��o para o sinal de timer SIGALRM
 	action.sa_handler = tratador ;
 	sigemptyset (&action.sa_mask) ;
 	action.sa_flags = 0 ;
@@ -187,6 +189,7 @@ int task_create (task_t *task, void (*start_routine)(void *), void *arg){
 	
 
 	return id;
+	
 }
 
 int task_switch (task_t *task){
