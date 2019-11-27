@@ -27,7 +27,7 @@ int idJoin;
 task_t *taskAtual;
 task_t *taskPtr;
 task_t *taskMain;
-task_t *pronta,*suspensa,*terminada,*exec;
+task_t *pronta,*suspensa,*terminada,*exec,*soneca;
 task_t dispatcher;
 unsigned int tempo=0;
 unsigned int soma=0;
@@ -67,6 +67,16 @@ int task_join(task_t *task){
 	
 	return ptrExit;
 }
+
+void task_sleep(int t){
+
+	taskAtual->state=SUSPENSA;
+	queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
+	queue_append ((queue_t **) &soneca, (queue_t*) taskAtual);
+	
+}
+
+
 
 task_t * scheduler(){
 
