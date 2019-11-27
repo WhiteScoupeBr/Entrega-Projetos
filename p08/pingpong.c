@@ -10,6 +10,11 @@
 #endif
 
 #define STACKSIZE 32768
+#define NOVA 1
+#define PRONTA 2
+#define SUSPENSA 3
+#define EXEC 4
+#define TERMINADA 5
 
 // estrutura que define um tratador de sinal (deve ser global ou static)
 struct sigaction action ;
@@ -19,11 +24,13 @@ struct itimerval timer;
 
 ucontext_t contextMain;
 task_t *taskAtual;
+task_t *taskPtr;
 task_t *taskMain;
-task_t *pronta,*suspensa,*terminada;
+task_t *pronta,*suspensa,*terminada,*exec;
 task_t dispatcher;
 unsigned int tempo=0;
 unsigned int soma=0;
+int ptrExit;
 
 /*****************************************************/
 unsigned int systime () ;
@@ -46,32 +53,42 @@ void tratador (int signum)
 	}	
 }
 
+int task_join(task_t *task){
+
+	taskPtr=taskAtual;
+
+	if(task==NULL||task->state==TERMINADA){
+		return -1;
+	}
+
+	queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
+	taskAtual->state = SUSPENSA;
+	queue_append ((queue_t**) &suspensa, (queue_t*) taskAtual) ;
+	
+
+	task_yield();
+	return ptrExit;
+}
+
+/*void task_join_not_suspended(task_t* taskJoin){
+
+	if(suspensa!=NULL){
+		printf("Isa");
+		if(taskPtr==taskJoin){
+			queue_remove ((queue_t**) &suspensa, (queue_t*) taskPtr);
+			printf("Isa");
+			taskPtr->state=PRONTA;
+			queue_append ((queue_t **) &pronta, (queue_t*) taskPtr);
+		}
+	}
+}*/
+
 task_t * scheduler(){
 
-	task_t *ptr = pronta;
-	task_t *ptrPrio =pronta;
-	int i;
-	int tam = queue_size((queue_t*)pronta);
-	int auxP = pronta->prioD;
+	pronta=pronta->next; 
+    pronta->quantum=20;
 
-
-	for(i=0;i<tam;i++){
-		if((ptr->prioD) < auxP){
-			auxP=ptr->prioD;
-			ptrPrio=ptr;
-		}
-		ptr=ptr->next;
-	}
-	
-	for(i=0;i<tam;i++){
-		if(ptr!=ptrPrio && ptr->prioD>(-19))
-			ptr->prioD=(ptr->prioD)-1;
-		ptr=ptr->next;
-	}
-
-	ptrPrio->prioD=ptrPrio->prio;
-	ptrPrio->quantum=20;
-    return ptrPrio;
+    return pronta;
 }
 
 void task_yield(){
@@ -94,18 +111,15 @@ void imprimeValores(task_t* task){
 void dispatcher_body (){ // dispatcher é uma tarefa
 
 	//pronta=pronta->next;
-	
-
    task_t* next;
    
    while ( queue_size((queue_t*) pronta) > 0 )
    {
-		 soma=0;
+	  soma=0;
       next = scheduler() ; // scheduler é uma função
 	  soma= systime();
       if (next)
       {
-         	
 			soma= systime();
 			task_switch (next) ;
 			soma = systime()-soma;
@@ -161,7 +175,7 @@ int task_create (task_t *task, void (*start_routine)(void *), void *arg){
 
 	task->args = arg;
 	task->tid = id;
-	task->state= 2;
+	task->state= PRONTA;
 	task->prio =0;
 	task->prioD = 0;
 	task->execTime=systime();
@@ -195,9 +209,10 @@ int task_create (task_t *task, void (*start_routine)(void *), void *arg){
 int task_switch (task_t *task){
 
 	if (task){
-		ucontext_t *aux= &taskAtual->context;
+		ucontext_t *aux= &taskAtual->context;	
 		taskAtual= task;
-		taskAtual->state=4;
+		taskAtual->state=EXEC;
+        //queue_append((queue_t**)&exec,(queue_t*)taskAtual);
 		task->activs++;
 		swapcontext(aux, &task->context);
 		
@@ -209,7 +224,8 @@ int task_switch (task_t *task){
 void task_exit (int exit_code){
 
 	ucontext_t *aux= &taskAtual->context;
-	taskAtual->state=5;
+	taskAtual->state=TERMINADA;
+
 	if(taskAtual==&dispatcher){
 		taskAtual->execTime= systime()-taskAtual->execTime;
 		imprimeValores(taskAtual);
@@ -222,9 +238,10 @@ void task_exit (int exit_code){
 		soma = systime() -soma;
 		taskAtual->processTime+=soma;
 		imprimeValores(taskAtual);
+		task_join_not_suspended(taskAtual);
 		taskAtual=&dispatcher;
 	}
-
+	ptrExit=exit_code;
 	swapcontext(aux, &taskAtual->context);
 }
 
@@ -263,32 +280,36 @@ int task_getprio (task_t *task){
 	
 }
 
-/*
-void task_suspend(task_t *task, task_t **queue){
 
+/*void task_suspend(task_t *task, task_t **queue){
+
+    //int tam = queue_size((queue_t*)queue);
+	int tam2=queue_size((queue_t*)&exec);
 	if(task==NULL){
-		if(queue_size((queue_t*) queue)!=NULL){
-			queue_remove ((queue_t**) &exec, (queue_t*) &taskAtual) ;
-		}
-		queue_append ((queue_t **) &queue, (queue_t*) &taskAtual);
-		taskAtual->state = 3;
+		//if(tam2!=0){
+		//	queue_remove ((queue_t**) &exec, (queue_t*) &taskAtual) ;
+		//}
+		//queue_append ((queue_t **) &queue, (queue_t*) &taskAtual);
+		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
+		taskAtual->state = SUSPENSA;
 	}
 	else{
-		if(queue_size((queue_t*) queue)!=NULL){
-			queue_remove ((queue_t**) &exec, (queue_t*) &task) ;
-		}
-		queue_append ((queue_t **) &queue, (queue_t*) &task);
-		task->state = 3;
+		//if(tam2!=0){
+			//queue_remove ((queue_t**) &exec, (queue_t*) &task) ;
+		//}
+		//queue_append ((queue_t **) &queue, (queue_t*) &task);
+		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
+		task->state = SUSPENSA;
 	}
 	
 }
 
 void task_resume (task_t *task){
 
-	queue_remove ((queue_t**) &suspensa, (queue_t*) &task) ;
+	//queue_remove ((queue_t**) &suspensa, (queue_t*) &task) ;
 
 	queue_append ((queue_t **) &pronta, (queue_t*) &task);
-	task->state=2;
+	task->state=PRONTA;
 }
 */
 
