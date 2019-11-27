@@ -64,6 +64,7 @@ int task_join(task_t *task){
 	}
 	
 	task_suspend(taskAtual,&pronta);
+	
 	return ptrExit;
 }
 
