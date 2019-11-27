@@ -281,23 +281,23 @@ int task_getprio (task_t *task){
 }
 
 
-/*void task_suspend(task_t *task, task_t **queue){
+void task_suspend(task_t *task, task_t **queue){
 
     //int tam = queue_size((queue_t*)queue);
 	int tam2=queue_size((queue_t*)&exec);
 	if(task==NULL){
-		//if(tam2!=0){
-		//	queue_remove ((queue_t**) &exec, (queue_t*) &taskAtual) ;
-		//}
-		//queue_append ((queue_t **) &queue, (queue_t*) &taskAtual);
+		if(tam2!=0){
+			queue_remove ((queue_t**) &exec, (queue_t*) &taskAtual) ;
+		}
+		queue_append ((queue_t **) &queue, (queue_t*) &taskAtual);
 		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
 		taskAtual->state = SUSPENSA;
 	}
 	else{
-		//if(tam2!=0){
-			//queue_remove ((queue_t**) &exec, (queue_t*) &task) ;
-		//}
-		//queue_append ((queue_t **) &queue, (queue_t*) &task);
+		if(tam2!=0){
+			queue_remove ((queue_t**) &exec, (queue_t*) &task) ;
+		}
+		queue_append ((queue_t **) &queue, (queue_t*) &task);
 		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
 		task->state = SUSPENSA;
 	}
@@ -306,9 +306,8 @@ int task_getprio (task_t *task){
 
 void task_resume (task_t *task){
 
-	//queue_remove ((queue_t**) &suspensa, (queue_t*) &task) ;
-
-	queue_append ((queue_t **) &pronta, (queue_t*) &task);
+	queue_remove ((queue_t**) &suspensa, (queue_t*) task) ;
+	queue_append ((queue_t **) &pronta, (queue_t*) task);
 	task->state=PRONTA;
 }
 */
