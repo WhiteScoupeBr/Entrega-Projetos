@@ -23,6 +23,7 @@ struct sigaction action ;
 struct itimerval timer;
 
 ucontext_t contextMain;
+int idJoin;
 task_t *taskAtual;
 task_t *taskPtr;
 task_t *taskMain;
@@ -56,36 +57,42 @@ void tratador (int signum)
 int task_join(task_t *task){
 
 	taskPtr=taskAtual;
+	task->tid=idJoin;
 
 	if(task==NULL||task->state==TERMINADA){
 		return -1;
 	}
 	
-	task_suspend(taskPtr,&pronta);
-
-	task_yield();
+	task_suspend(taskAtual,&pronta);
 	return ptrExit;
-}
-
-void task_join_not_suspended(task_t* taskJoin){
-
-		if(suspensa!=NULL){
-			printf("dentroJoin");
-			if(taskPtr==taskJoin){
-				task_resume(taskPtr);
-			}
-			
-		}
-		
-	
 }
 
 task_t * scheduler(){
 
-	pronta=pronta->next; 
-    pronta->quantum=20;
+	task_t *ptr = pronta;
+	task_t *ptrPrio =pronta;
+	int i;
+	int tam = queue_size((queue_t*)pronta);
+	int auxP = pronta->prioD;
 
-    return pronta;
+
+	for(i=0;i<tam;i++){
+		if((ptr->prioD) < auxP){
+			auxP=ptr->prioD;
+			ptrPrio=ptr;
+		}
+		ptr=ptr->next;
+	}
+	
+	for(i=0;i<tam;i++){
+		if(ptr!=ptrPrio && ptr->prioD>(-19))
+			ptr->prioD=(ptr->prioD)-1;
+		ptr=ptr->next;
+	}
+
+	ptrPrio->prioD=ptrPrio->prio;
+	ptrPrio->quantum=20;
+    return ptrPrio;
 }
 
 void task_yield(){
@@ -107,7 +114,7 @@ void imprimeValores(task_t* task){
 
 void dispatcher_body (){ // dispatcher é uma tarefa
 
-	pronta=pronta->next;
+   //pronta=pronta->prev;
    task_t* next;
    
    while ( queue_size((queue_t*) pronta) > 0 )
@@ -220,11 +227,12 @@ void task_exit (int exit_code){
 
 	ucontext_t *aux= &taskAtual->context;
 	taskAtual->state=TERMINADA;
-
+	task_t* ptr =taskAtual;
 	if(taskAtual==&dispatcher){
 		taskAtual->execTime= systime()-taskAtual->execTime;
 		imprimeValores(taskAtual);
 		taskAtual=taskMain;
+		
 	}
 	else{
 		queue_remove((queue_t**)&pronta,(queue_t*)taskAtual);
@@ -233,8 +241,10 @@ void task_exit (int exit_code){
 		soma = systime() -soma;
 		taskAtual->processTime+=soma;
 		imprimeValores(taskAtual);
-		task_join_not_suspended(taskAtual);
 		taskAtual=&dispatcher;
+	}
+	if(ptr->tid==idJoin){
+		task_resume(taskPtr);
 	}
 	ptrExit=exit_code;
 	swapcontext(aux, &taskAtual->context);
@@ -289,6 +299,7 @@ void task_suspend(task_t *task, task_t **queue){
 		queue_append ((queue_t **) &suspensa, (queue_t*) task);
 		task->state = SUSPENSA;
 	}
+	task_yield();
 	
 }
 
@@ -297,6 +308,7 @@ void task_resume (task_t *task){
 	queue_remove ((queue_t**) &suspensa, (queue_t*) task) ;
 	queue_append ((queue_t **) &pronta, (queue_t*) task);
 	task->state=PRONTA;
+	
 }
 
 
