@@ -60,28 +60,25 @@ int task_join(task_t *task){
 	if(task==NULL||task->state==TERMINADA){
 		return -1;
 	}
-
-	queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
-	taskAtual->state = SUSPENSA;
-	queue_append ((queue_t**) &suspensa, (queue_t*) taskAtual) ;
 	
+	task_suspend(taskPtr,&pronta);
 
 	task_yield();
 	return ptrExit;
 }
 
-/*void task_join_not_suspended(task_t* taskJoin){
+void task_join_not_suspended(task_t* taskJoin){
 
-	if(suspensa!=NULL){
-		printf("Isa");
-		if(taskPtr==taskJoin){
-			queue_remove ((queue_t**) &suspensa, (queue_t*) taskPtr);
-			printf("Isa");
-			taskPtr->state=PRONTA;
-			queue_append ((queue_t **) &pronta, (queue_t*) taskPtr);
+		if(suspensa!=NULL){
+			printf("dentroJoin");
+			if(taskPtr==taskJoin){
+				task_resume(taskPtr);
+			}
+			
 		}
-	}
-}*/
+		
+	
+}
 
 task_t * scheduler(){
 
@@ -110,7 +107,7 @@ void imprimeValores(task_t* task){
 
 void dispatcher_body (){ // dispatcher é uma tarefa
 
-	//pronta=pronta->next;
+	pronta=pronta->next;
    task_t* next;
    
    while ( queue_size((queue_t*) pronta) > 0 )
@@ -211,8 +208,6 @@ int task_switch (task_t *task){
 	if (task){
 		ucontext_t *aux= &taskAtual->context;	
 		taskAtual= task;
-		taskAtual->state=EXEC;
-        //queue_append((queue_t**)&exec,(queue_t*)taskAtual);
 		task->activs++;
 		swapcontext(aux, &task->context);
 		
@@ -283,22 +278,15 @@ int task_getprio (task_t *task){
 
 void task_suspend(task_t *task, task_t **queue){
 
-    //int tam = queue_size((queue_t*)queue);
-	int tam2=queue_size((queue_t*)&exec);
 	if(task==NULL){
-		if(tam2!=0){
-			queue_remove ((queue_t**) &exec, (queue_t*) &taskAtual) ;
-		}
-		queue_append ((queue_t **) &queue, (queue_t*) &taskAtual);
-		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
+		queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
+		queue_append ((queue_t **) &suspensa, (queue_t*) taskAtual);
+		
 		taskAtual->state = SUSPENSA;
 	}
 	else{
-		if(tam2!=0){
-			queue_remove ((queue_t**) &exec, (queue_t*) &task) ;
-		}
-		queue_append ((queue_t **) &queue, (queue_t*) &task);
-		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
+		queue_remove ((queue_t**) &pronta, (queue_t*) task) ;
+		queue_append ((queue_t **) &suspensa, (queue_t*) task);
 		task->state = SUSPENSA;
 	}
 	
@@ -310,5 +298,5 @@ void task_resume (task_t *task){
 	queue_append ((queue_t **) &pronta, (queue_t*) task);
 	task->state=PRONTA;
 }
-*/
+
 
