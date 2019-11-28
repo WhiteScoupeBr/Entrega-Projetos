@@ -21,7 +21,7 @@ typedef struct task_t
   int prioD;
   int quantum;
   int flag;
-  unsigned int execTime, processTime;
+  unsigned int tsono,execTime, processTime;
   int activs;  
   // preencher quando necessário
 } task_t ;

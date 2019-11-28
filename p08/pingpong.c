@@ -118,7 +118,7 @@ void dispatcher_body (){ // dispatcher é uma tarefa
    //pronta=pronta->prev;
    task_t* next;
    
-   while ( queue_size((queue_t*) pronta) > 0 )
+   while ( queue_size((queue_t*) pronta) > 0 ||queue_size((queue_t*) suspensa) > 0)
    {
 	  soma=0;
       next = scheduler() ; // scheduler é uma função

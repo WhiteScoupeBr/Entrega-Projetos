@@ -70,10 +70,37 @@ int task_join(task_t *task){
 
 void task_sleep(int t){
 
+	
 	taskAtual->state=SUSPENSA;
+	taskAtual->tsono= (1000*t)+systime();
 	queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
 	queue_append ((queue_t **) &soneca, (queue_t*) taskAtual);
-	
+	task_yield();
+}
+
+void task_resume_soneca(){
+
+
+	if(soneca!=NULL){
+		task_t* ptr= soneca;
+		
+		while(soneca!=NULL){
+		//printf("Entro\n");
+		if(ptr->tsono>=systime()){
+			//printf("Entro\n");
+					ptr->state=PRONTA;
+					ptr->tsono=0;
+					queue_remove ((queue_t**) &soneca, (queue_t*) ptr) ;
+					queue_append ((queue_t **) &pronta, (queue_t*) ptr);
+					if(soneca==NULL){
+						return;
+					}
+					ptr=soneca;
+				}
+			ptr=ptr->next;
+		}
+		
+	}
 }
 
 
@@ -128,18 +155,19 @@ void dispatcher_body (){ // dispatcher é uma tarefa
    //pronta=pronta->prev;
    task_t* next;
    
-   while ( queue_size((queue_t*) pronta) > 0 )
+   while ( queue_size((queue_t*) pronta) > 0 ||queue_size((queue_t*) suspensa) > 0||queue_size((queue_t*) soneca) > 0)
    {
-	  soma=0;
-      next = scheduler() ; // scheduler é uma função
-	  soma= systime();
-      if (next)
-      {
+		task_resume_soneca();
+		soma=0;
+      	next = scheduler() ; // scheduler é uma função
+	  	soma= systime();
+      	if (next)
+      	{
 			soma= systime();
 			task_switch (next) ;
 			soma = systime()-soma;
 			next->processTime+=soma;
-      }
+      	}
    }
  task_exit(0) ; // encerra a tarefa dispatcher
 }
