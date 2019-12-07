@@ -87,7 +87,6 @@ void task_resume_soneca(){
 		while(soneca!=NULL){
 		//printf("Entro\n");
 		if(ptr->tsono>=systime()){
-			//printf("Entro\n");
 					ptr->state=PRONTA;
 					ptr->tsono=0;
 					queue_remove ((queue_t**) &soneca, (queue_t*) ptr) ;
