@@ -27,7 +27,7 @@ int idJoin;
 task_t *taskAtual;
 task_t *taskPtr;
 task_t *taskMain;
-task_t *pronta,*suspensa,*terminada,*exec;
+task_t *pronta,*suspensa,*terminada,*exec,*soneca;
 task_t dispatcher;
 unsigned int tempo=0;
 unsigned int soma=0;
@@ -63,35 +63,46 @@ int task_join(task_t *task){
 		return -1;
 	}
 	
-<<<<<<< HEAD
-	task_suspend(taskPtr,&pronta);
-
-	task_yield();
-	return ptrExit;
-}
-
-void task_join_not_suspended(task_t* taskJoin){
-
-		if(suspensa!=NULL){
-			printf("dentroJoin");
-			if(taskPtr==taskJoin){
-				task_resume(taskPtr);
-			}
-			
-		}
-		
-	
-}
-
-task_t * scheduler(){
-
-	pronta=pronta->next; 
-    pronta->quantum=20;
-=======
 	task_suspend(taskAtual,&pronta);
 	
 	return ptrExit;
 }
+
+void task_sleep(int t){
+
+	
+	taskAtual->state=SUSPENSA;
+	taskAtual->tsono= (1000*t)+systime();
+	queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
+	queue_append ((queue_t **) &soneca, (queue_t*) taskAtual);
+	task_yield();
+}
+
+void task_resume_soneca(){
+
+
+	if(soneca!=NULL){
+		task_t* ptr= soneca;
+		
+		while(soneca!=NULL){
+		//printf("Entro\n");
+		if(ptr->tsono>=systime()){
+					ptr->state=PRONTA;
+					ptr->tsono=0;
+					queue_remove ((queue_t**) &soneca, (queue_t*) ptr) ;
+					queue_append ((queue_t **) &pronta, (queue_t*) ptr);
+					if(soneca==NULL){
+						return;
+					}
+					ptr=soneca;
+				}
+			ptr=ptr->next;
+		}
+		
+	}
+}
+
+
 
 task_t * scheduler(){
 
@@ -115,7 +126,6 @@ task_t * scheduler(){
 			ptr->prioD=(ptr->prioD)-1;
 		ptr=ptr->next;
 	}
->>>>>>> master
 
 	ptrPrio->prioD=ptrPrio->prio;
 	ptrPrio->quantum=20;
@@ -141,25 +151,22 @@ void imprimeValores(task_t* task){
 
 void dispatcher_body (){ // dispatcher é uma tarefa
 
-<<<<<<< HEAD
-	pronta=pronta->next;
-=======
    //pronta=pronta->prev;
->>>>>>> master
    task_t* next;
    
-   while ( queue_size((queue_t*) pronta) > 0 ||queue_size((queue_t*) suspensa) > 0)
+   while ( queue_size((queue_t*) pronta) > 0 ||queue_size((queue_t*) suspensa) > 0||queue_size((queue_t*) soneca) > 0)
    {
-	  soma=0;
-      next = scheduler() ; // scheduler é uma função
-	  soma= systime();
-      if (next)
-      {
+		task_resume_soneca();
+		soma=0;
+      	next = scheduler() ; // scheduler é uma função
+	  	soma= systime();
+      	if (next)
+      	{
 			soma= systime();
 			task_switch (next) ;
 			soma = systime()-soma;
 			next->processTime+=soma;
-      }
+      	}
    }
  task_exit(0) ; // encerra a tarefa dispatcher
 }
@@ -320,22 +327,6 @@ int task_getprio (task_t *task){
 void task_suspend(task_t *task, task_t **queue){
 
 	if(task==NULL){
-<<<<<<< HEAD
-<<<<<<< 754bc393a9ed7c9f980af516727ca93ad98b5089
-		//if(tam2!=0){
-		//	queue_remove ((queue_t**) &exec, (queue_t*) &taskAtual) ;
-		//}
-		//queue_append ((queue_t **) &queue, (queue_t*) &taskAtual);
-		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
-		taskAtual->state = SUSPENSA;
-	}
-	else{
-		//if(tam2!=0){
-			//queue_remove ((queue_t**) &exec, (queue_t*) &task) ;
-		//}
-		//queue_append ((queue_t **) &queue, (queue_t*) &task);
-		queue_remove ((queue_t**) &pronta, (queue_t*) &taskAtual) ;
-=======
 		queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
 		queue_append ((queue_t **) &suspensa, (queue_t*) taskAtual);
 		
@@ -344,17 +335,6 @@ void task_suspend(task_t *task, task_t **queue){
 	else{
 		queue_remove ((queue_t**) &pronta, (queue_t*) task) ;
 		queue_append ((queue_t **) &suspensa, (queue_t*) task);
->>>>>>> quasem as iy nebis
-=======
-		queue_remove ((queue_t**) &pronta, (queue_t*) taskAtual) ;
-		queue_append ((queue_t **) &suspensa, (queue_t*) taskAtual);
-		
-		taskAtual->state = SUSPENSA;
-	}
-	else{
-		queue_remove ((queue_t**) &pronta, (queue_t*) task) ;
-		queue_append ((queue_t **) &suspensa, (queue_t*) task);
->>>>>>> master
 		task->state = SUSPENSA;
 	}
 	task_yield();
